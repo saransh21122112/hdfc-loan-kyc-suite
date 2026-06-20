@@ -138,6 +138,17 @@ All endpoints except `/health` require `Authorization: Bearer <token>`.
 
 ---
 
+## GitHub Repository
+
+**URL:** https://github.com/saransh21122112/hdfc-loan-kyc-suite
+**Visibility:** Public
+**Default branch:** main
+**GitHub username:** saransh21122112
+
+Clone: `git clone https://github.com/saransh21122112/hdfc-loan-kyc-suite.git`
+
+---
+
 ## Session Log
 
 ### Session 1 — 2026-06-20
@@ -169,6 +180,33 @@ All endpoints except `/health` require `Authorization: Bearer <token>`.
 2. Wire MinIO storage so uploaded documents are persisted (not just OCR'd in memory)
 3. Generate synthetic PAN/Aadhaar images for end-to-end OCR pipeline testing
 4. Write the Security Architecture Document (needed for CRO conversation)
+
+### Session 2 — 2026-06-20
+**Goal:** Push to GitHub, create .env, add OpenAI API key
+
+**Done:**
+- Created `.env` (local only, never committed) with all service credentials + OpenAI API key
+- Updated `.env.example` with `OPENAI_API_KEY` placeholder and RBI data residency warning
+- Updated `.gitignore` to exclude `.claude/` settings folder
+- Initialized git repo, renamed default branch to `main`
+- Made initial commit (25 files, 2007 insertions)
+- Installed `gh` CLI via Homebrew
+- Authenticated `gh` CLI with GitHub account `saransh21122112`
+- Created public GitHub repo: https://github.com/saransh21122112/hdfc-loan-kyc-suite
+- Pushed all code; confirmed `.env` is NOT on GitHub (404 on remote check)
+
+**OpenAI key usage rule (important):**
+The key in `.env` is for NON-PII tasks only:
+- Sales collateral, pitch decks, cold emails
+- Code generation and debugging
+- Internal document summaries (no customer data)
+NEVER send PAN / Aadhaar / bank statement data to OpenAI. All document processing stays on-premise.
+
+**Next session should:**
+1. Add `/auth/token` endpoint (JWT issuance) so the demo API can be called end-to-end
+2. Wire MinIO storage — documents uploaded to `/extract` should be persisted, not just OCR'd in memory
+3. Generate synthetic PAN/Aadhaar images for end-to-end OCR pipeline testing
+4. Write the Security Architecture Document (needed before any HDFC CRO meeting)
 
 ---
 
