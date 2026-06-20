@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from kyc_engine.api.routes import kyc
+from kyc_engine.api.routes import auth, kyc
 from kyc_engine.core.config import settings
 from kyc_engine.db.session import create_tables
 from kyc_engine.models.schemas import HealthResponse
@@ -44,6 +44,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    auth.router,
+    prefix=f"/api/{settings.api_version}/auth",
+    tags=["Auth"],
 )
 
 app.include_router(
