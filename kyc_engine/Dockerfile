@@ -16,8 +16,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy source into kyc_engine/ so package imports resolve correctly
+COPY . ./kyc_engine/
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "kyc_engine.main:app", "--host", "0.0.0.0", "--port", "8000"]
