@@ -43,5 +43,10 @@ class Settings(BaseSettings):
     # "tesseract" (default) or "paddleocr" (better for Hindi/regional scripts)
     ocr_backend: str = "tesseract"
 
+    # OpenAI — used ONLY for non-PII tasks in production (sales collateral, code gen).
+    # For demo extraction: GPT-4o Vision reads documents when this key is set.
+    # COMPLIANCE: Replace with on-premise model before bank deployment.
+    openai_api_key: str = ""
+
 
 settings = Settings()

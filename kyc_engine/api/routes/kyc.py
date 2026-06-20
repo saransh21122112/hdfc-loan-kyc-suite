@@ -15,6 +15,7 @@ from kyc_engine.models.schemas import (
     KYCStatus,
     KYCStatusResponse,
 )
+from kyc_engine.services.ai_extractor import extract_with_gpt4o
 from kyc_engine.services.document_classifier import classify_document
 from kyc_engine.services.field_extractor import extract_fields
 from kyc_engine.services.ocr import ocr_from_bytes
@@ -60,18 +61,41 @@ async def extract_kyc(
                 detail=f"'{upload.filename}' exceeds 10 MB limit.",
             )
 
-        ocr_result = ocr_from_bytes(file_bytes, upload.filename)
-        doc_type = classify_document(ocr_result.text, filename=upload.filename or "")
-        fields = extract_fields(doc_type, ocr_result.text)
+        # ── Primary: GPT-4o Vision (accurate on real-world photos) ──────────
+        ai_result = None
+        if not upload.filename.lower().endswith(".pdf"):
+            ai_result = extract_with_gpt4o(file_bytes, upload.filename or "")
+
+        if ai_result:
+            doc_type_str = ai_result.document_type
+            try:
+                doc_type = DocumentType(doc_type_str)
+            except ValueError:
+                doc_type = DocumentType.UNKNOWN
+
+            # Normalise GPT-4o field format → internal ExtractedField schema
+            fields = {
+                k: {"value": v.get("value"), "confidence": v.get("confidence", 0.9), "source": "gpt4o_vision"}
+                if isinstance(v, dict) else {"value": v, "confidence": 0.9, "source": "gpt4o_vision"}
+                for k, v in ai_result.fields.items()
+            }
+            ocr_confidence = ai_result.confidence
+
+        else:
+            # ── Fallback: Tesseract OCR + regex ──────────────────────────────
+            ocr_result = ocr_from_bytes(file_bytes, upload.filename)
+            doc_type = classify_document(ocr_result.text, filename=upload.filename or "")
+            fields = extract_fields(doc_type, ocr_result.text)
+            ocr_confidence = ocr_result.confidence
 
         document_results.append(
             DocumentResult(
                 document_id=str(uuid.uuid4()),
                 file_name=upload.filename,
                 document_type=doc_type,
-                ocr_confidence=ocr_result.confidence,
+                ocr_confidence=ocr_confidence,
                 extracted_fields=fields,
-                raw_text_preview=ocr_result.text[:500],
+                raw_text_preview=ai_result.raw_response[:500] if ai_result else "",
             ).model_dump()
         )
 
