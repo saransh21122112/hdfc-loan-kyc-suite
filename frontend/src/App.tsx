@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { getToken, extractKYC, KYCResult } from './api/kyc'
 import UploadForm from './components/UploadForm'
 import ResultsPanel from './components/ResultsPanel'
+import { CreditAssessment } from './components/CreditAssessment'
 import './App.css'
 
-type Screen = 'login' | 'upload' | 'results'
+type Screen = 'login' | 'upload' | 'results' | 'credit'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login')
@@ -53,12 +54,56 @@ export default function App() {
             </div>
           </div>
           {screen !== 'login' && (
-            <button className="btn-ghost" onClick={() => { setScreen('upload'); setResult(null) }}>
-              ← New Extraction
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {screen === 'results' && (
+                <button
+                  className="btn-ghost"
+                  style={{ background: '#1e3a5f', color: '#fff', border: 'none' }}
+                  onClick={() => setScreen('credit')}
+                >
+                  🧠 Credit Assessment →
+                </button>
+              )}
+              {screen === 'credit' && (
+                <button className="btn-ghost" onClick={() => setScreen('results')}>
+                  ← KYC Results
+                </button>
+              )}
+              <button className="btn-ghost" onClick={() => { setScreen('upload'); setResult(null) }}>
+                ← New Extraction
+              </button>
+            </div>
           )}
         </div>
       </header>
+
+      {/* Phase tabs — visible after login */}
+      {screen !== 'login' && (
+        <div style={{
+          background: '#f1f5f9', borderBottom: '1px solid #e2e8f0',
+          display: 'flex', gap: 0, padding: '0 24px',
+        }}>
+          {([
+            { id: 'upload',  label: '📄 KYC Extraction',       disabled: false },
+            { id: 'results', label: '✅ Validation',            disabled: !result },
+            { id: 'credit',  label: '🧠 Credit Underwriting',  disabled: !result },
+          ] as const).map(tab => (
+            <button
+              key={tab.id}
+              disabled={tab.disabled}
+              onClick={() => !tab.disabled && setScreen(tab.id)}
+              style={{
+                padding: '10px 20px', border: 'none', background: 'transparent',
+                fontSize: 13, fontWeight: 600, cursor: tab.disabled ? 'not-allowed' : 'pointer',
+                color: screen === tab.id ? '#1e3a5f' : tab.disabled ? '#cbd5e1' : '#64748b',
+                borderBottom: screen === tab.id ? '2px solid #1e3a5f' : '2px solid transparent',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       <main className="main">
         {error && <div className="error-banner">{error}</div>}
@@ -72,11 +117,18 @@ export default function App() {
         {screen === 'results' && result && (
           <ResultsPanel result={result} />
         )}
+        {screen === 'credit' && (
+          <CreditAssessment
+            token={token}
+            applicantId={result?.applicant_id ?? ''}
+            kycRequestId={result?.request_id}
+          />
+        )}
       </main>
 
       <footer className="footer">
-        HDFC AI KYC Intelligence Suite · Powered by Tesseract OCR + FastAPI ·
-        All data processed on-premise per RBI data residency norms
+        HDFC AI KYC Intelligence Suite · Phase 1: KYC · Phase 2: Credit Underwriting ·
+        RBI-compliant explainable AI
       </footer>
     </div>
   )

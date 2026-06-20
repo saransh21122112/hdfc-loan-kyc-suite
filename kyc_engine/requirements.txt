@@ -34,6 +34,11 @@ numpy<2  # cv2 4.9.x compiled against NumPy 1.x; NumPy 2.x breaks it
 # spacy==3.7.4             # pip install then: python -m spacy download en_core_web_sm
 rapidfuzz==3.9.0           # fuzzy name matching for cross-document validation
 
+# Credit underwriting (Phase 2)
+xgboost==2.0.3
+shap==0.45.1
+pandas==2.2.2
+
 # Object storage (MinIO / S3-compatible)
 boto3==1.34.100
 
