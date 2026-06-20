@@ -36,9 +36,21 @@ _BANK_STATEMENT_SIGNALS = [
 ]
 
 
-def classify_document(ocr_text: str) -> DocumentType:
-    text_lower = ocr_text.lower()
+_FILENAME_HINTS = {
+    DocumentType.PAN: ["pan", "pancard", "pan_card", "pan-card"],
+    DocumentType.AADHAAR: ["aadhaar", "aadhar", "adhaar", "uid", "uidai"],
+    DocumentType.BANK_STATEMENT: ["bank", "statement", "passbook", "account"],
+}
 
+
+def classify_document(ocr_text: str, filename: str = "") -> DocumentType:
+    # Filename is a stronger signal than garbled OCR text
+    fname = filename.lower()
+    for doc_type, keywords in _FILENAME_HINTS.items():
+        if any(kw in fname for kw in keywords):
+            return doc_type
+
+    text_lower = ocr_text.lower()
     pan_score = _score(ocr_text, text_lower, _PAN_SIGNALS)
     aadhaar_score = _score(ocr_text, text_lower, _AADHAAR_SIGNALS)
     bank_score = _score(ocr_text, text_lower, _BANK_STATEMENT_SIGNALS)

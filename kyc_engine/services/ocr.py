@@ -52,14 +52,20 @@ class TesseractBackend(BaseOCRBackend):
             processed, config=config, output_type=pytesseract.Output.DICT
         )
 
-        words, confidences = [], []
-        for text, conf in zip(data["text"], data["conf"]):
+        # Reconstruct text preserving line structure (block+line grouping)
+        line_map: dict = {}
+        confidences = []
+        for text, conf, block, par, line in zip(
+            data["text"], data["conf"],
+            data["block_num"], data["par_num"], data["line_num"],
+        ):
             if text.strip():
-                words.append(text)
+                key = (block, par, line)
+                line_map.setdefault(key, []).append(text)
                 if conf != -1:
                     confidences.append(conf / 100.0)
 
-        full_text = " ".join(words)
+        full_text = "\n".join(" ".join(words) for words in line_map.values())
         mean_conf = float(np.mean(confidences)) if confidences else 0.0
 
         return OCRResult(text=full_text.strip(), confidence=round(mean_conf, 3))

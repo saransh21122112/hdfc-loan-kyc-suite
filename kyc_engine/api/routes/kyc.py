@@ -61,7 +61,7 @@ async def extract_kyc(
             )
 
         ocr_result = ocr_from_bytes(file_bytes, upload.filename)
-        doc_type = classify_document(ocr_result.text)
+        doc_type = classify_document(ocr_result.text, filename=upload.filename or "")
         fields = extract_fields(doc_type, ocr_result.text)
 
         document_results.append(
