@@ -1,8 +1,11 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from kyc_engine.api.routes import auth, kyc
 from kyc_engine.core.config import settings
@@ -66,3 +69,22 @@ async def health():
         service=settings.app_name,
         version=settings.api_version,
     )
+
+
+# ── Serve React frontend ───────────────────────────────────────────────────────
+# Mount built JS/CSS assets. Must come after all /api routes are registered.
+_static = Path("static")
+if _static.exists():
+    app.mount("/assets", StaticFiles(directory=_static / "assets"), name="assets")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_index():
+        return FileResponse(_static / "index.html")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        # Serve any static file that exists (e.g. vite.svg); fall back to index.html for SPA routing
+        candidate = _static / full_path
+        if candidate.exists() and candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(_static / "index.html")

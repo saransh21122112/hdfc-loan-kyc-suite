@@ -1,6 +1,16 @@
+# ── Stage 1: Build React frontend ─────────────────────────────────────────────
+FROM node:20-alpine AS frontend-build
+
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+# Output: /frontend/dist/
+
+# ── Stage 2: Python backend + static files ────────────────────────────────────
 FROM python:3.11-slim
 
-# Tesseract OCR + Indian language packs + poppler (PDF) + OpenCV deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr \
     tesseract-ocr-hin \
@@ -16,8 +26,10 @@ WORKDIR /app
 COPY kyc_engine/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy into kyc_engine/ so "from kyc_engine.xxx import yyy" resolves correctly
 COPY kyc_engine/ ./kyc_engine/
+
+# Copy the built React app — FastAPI will serve it at /
+COPY --from=frontend-build /frontend/dist ./static/
 
 EXPOSE 8000
 

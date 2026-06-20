@@ -39,17 +39,6 @@ services:
       - key: MINIO_ENDPOINT
         value: "not-configured"
 
-  # ── Frontend (React static site) ──────────────────────────────────────────
-  - type: web
-    name: hdfc-kyc-frontend
-    runtime: static
-    rootDir: frontend
-    buildCommand: npm ci && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://hdfc-loan-kyc-suite.onrender.com
-
   # ── Redis ──────────────────────────────────────────────────────────────────
   - type: redis
     name: kyc-redis
