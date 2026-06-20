@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,10 +9,18 @@ from kyc_engine.core.config import settings
 from kyc_engine.db.session import create_tables
 from kyc_engine.models.schemas import HealthResponse
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_tables()
+    try:
+        await create_tables()
+        logger.info("Database tables ready.")
+    except Exception as e:
+        # Log but don't crash — allows /health to respond even if DB is misconfigured.
+        # KYC endpoints will return 500 until DATABASE_URL is set correctly.
+        logger.error(f"Database connection failed on startup: {e}")
     yield
 
 
