@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,7 +10,17 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # PostgreSQL
+    # Render provides "postgres://" or "postgresql://" — asyncpg needs "postgresql+asyncpg://"
     database_url: str = "postgresql+asyncpg://kyc:kyc_password@localhost:5432/kyc_db"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_database_url(cls, v: str) -> str:
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
     # MinIO — self-hosted S3 satisfies RBI data residency requirement
     minio_endpoint: str = "localhost:9000"

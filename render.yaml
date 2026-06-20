@@ -1,0 +1,53 @@
+services:
+  # ── KYC Engine (FastAPI) ───────────────────────────────────────────────────
+  - type: web
+    name: hdfc-kyc-engine
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kyc-postgres
+          property: connectionString
+
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: kyc-redis
+          property: connectionString
+
+      - key: DEBUG
+        value: "true"
+
+      - key: OCR_BACKEND
+        value: tesseract
+
+      # Set these manually in the Render dashboard → Environment
+      - key: SECRET_KEY
+        sync: false
+
+      - key: ENCRYPTION_KEY
+        sync: false
+
+      - key: OPENAI_API_KEY
+        sync: false
+
+      # MinIO not available on Render — document files are OCR'd in memory
+      # Raw document storage requires a self-hosted MinIO instance (on-prem deployment)
+      - key: MINIO_ENDPOINT
+        value: "not-configured"
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  - type: redis
+    name: kyc-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+databases:
+  - name: kyc-postgres
+    plan: free
+    databaseName: kyc_db
+    user: kyc
