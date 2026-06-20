@@ -24,6 +24,18 @@ Start every new conversation by reading this file first.
 
 ---
 
+## Live Deployment
+
+**Render URL:** https://hdfc-loan-kyc-suite.onrender.com
+**Health check:** https://hdfc-loan-kyc-suite.onrender.com/health → `{"status":"ok"}`
+**Swagger UI:** https://hdfc-loan-kyc-suite.onrender.com/docs
+**Status:** LIVE as of 2026-06-20
+
+Note: Free tier sleeps after 15 min idle. First request after sleep takes ~30s.
+For the bank demo, open the URL before the meeting to wake it up.
+
+---
+
 ## Current State (as of 2026-06-20)
 
 ### What is built and working
