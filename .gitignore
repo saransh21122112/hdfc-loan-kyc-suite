@@ -50,6 +50,9 @@ models/weights/
 *.log
 logs/
 
+# Claude Code local settings
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
