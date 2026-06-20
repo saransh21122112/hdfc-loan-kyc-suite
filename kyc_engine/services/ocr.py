@@ -40,27 +40,27 @@ class TesseractBackend(BaseOCRBackend):
     def extract(self, image: Image.Image) -> OCRResult:
         import pytesseract
 
-        # Preprocess: grayscale → denoise → threshold (improves accuracy on scans)
+        # Preprocess: grayscale → Otsu threshold (skip denoising — too slow on CPU)
         img_array = np.array(image.convert("RGB"))
         gray = cv2.cvtColor(img_array, cv2.COLOR_RGB2GRAY)
-        denoised = cv2.fastNlMeansDenoising(gray, h=10)
-        _, thresh = cv2.threshold(denoised, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         processed = Image.fromarray(thresh)
 
-        # lang=hin+eng covers Hindi numerals and English text on Indian docs
+        # Single Tesseract call — image_to_data gives both text and confidence
         config = "--oem 3 --psm 6 -l eng+hin"
         data = pytesseract.image_to_data(
             processed, config=config, output_type=pytesseract.Output.DICT
         )
 
-        words = [w for w in data["text"] if w.strip()]
-        confidences = [
-            c / 100.0
-            for c, w in zip(data["conf"], data["text"])
-            if w.strip() and c != -1
-        ]
+        words, confidences = [], []
+        for text, conf in zip(data["text"], data["conf"]):
+            if text.strip():
+                words.append(text)
+                if conf != -1:
+                    confidences.append(conf / 100.0)
+
+        full_text = " ".join(words)
         mean_conf = float(np.mean(confidences)) if confidences else 0.0
-        full_text = pytesseract.image_to_string(processed, config=config)
 
         return OCRResult(text=full_text.strip(), confidence=round(mean_conf, 3))
 
