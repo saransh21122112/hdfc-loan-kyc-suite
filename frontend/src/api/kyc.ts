@@ -1,4 +1,6 @@
-const BASE = '/api/v1'
+// VITE_API_URL is set on Render (full backend URL).
+// Empty string = relative path, which works for local Docker (nginx proxies /api).
+const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`
 
 export async function getToken(username: string, password: string): Promise<string> {
   const form = new FormData()
