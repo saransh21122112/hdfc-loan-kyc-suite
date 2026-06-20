@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from kyc_engine.api.routes import auth, kyc, credit
+from kyc_engine.api.routes import auth, kyc, credit, aml
 from kyc_engine.core.config import settings
 from kyc_engine.db.session import create_tables
 from kyc_engine.models.schemas import HealthResponse
@@ -65,6 +65,12 @@ app.include_router(
     credit.router,
     prefix=f"/api/{settings.api_version}/credit",
     tags=["Credit Underwriting"],
+)
+
+app.include_router(
+    aml.router,
+    prefix=f"/api/{settings.api_version}/aml",
+    tags=["AML Compliance"],
 )
 
 

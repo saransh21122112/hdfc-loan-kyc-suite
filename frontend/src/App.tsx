@@ -3,9 +3,10 @@ import { getToken, extractKYC, KYCResult } from './api/kyc'
 import UploadForm from './components/UploadForm'
 import ResultsPanel from './components/ResultsPanel'
 import { CreditAssessment } from './components/CreditAssessment'
+import { AMLMonitor } from './components/AMLMonitor'
 import './App.css'
 
-type Screen = 'login' | 'upload' | 'results' | 'credit'
+type Screen = 'login' | 'upload' | 'results' | 'credit' | 'aml'
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('login')
@@ -56,18 +57,12 @@ export default function App() {
           {screen !== 'login' && (
             <div style={{ display: 'flex', gap: 10 }}>
               {screen === 'results' && (
-                <button
-                  className="btn-ghost"
-                  style={{ background: '#1e3a5f', color: '#fff', border: 'none' }}
-                  onClick={() => setScreen('credit')}
-                >
-                  🧠 Credit Assessment →
+                <button className="btn-ghost" style={{ background: '#1e3a5f', color: '#fff', border: 'none' }} onClick={() => setScreen('credit')}>
+                  🧠 Credit →
                 </button>
               )}
-              {screen === 'credit' && (
-                <button className="btn-ghost" onClick={() => setScreen('results')}>
-                  ← KYC Results
-                </button>
+              {(screen === 'credit' || screen === 'aml') && (
+                <button className="btn-ghost" onClick={() => setScreen('results')}>← KYC Results</button>
               )}
               <button className="btn-ghost" onClick={() => { setScreen('upload'); setResult(null) }}>
                 ← New Extraction
@@ -84,9 +79,10 @@ export default function App() {
           display: 'flex', gap: 0, padding: '0 24px',
         }}>
           {([
-            { id: 'upload',  label: '📄 KYC Extraction',       disabled: false },
-            { id: 'results', label: '✅ Validation',            disabled: !result },
-            { id: 'credit',  label: '🧠 Credit Underwriting',  disabled: !result },
+            { id: 'upload',  label: '📄 KYC Extraction',      disabled: false },
+            { id: 'results', label: '✅ Validation',           disabled: !result },
+            { id: 'credit',  label: '🧠 Credit',              disabled: !result },
+            { id: 'aml',     label: '🔍 AML Monitor',         disabled: !result },
           ] as const).map(tab => (
             <button
               key={tab.id}
@@ -124,11 +120,18 @@ export default function App() {
             kycRequestId={result?.request_id}
           />
         )}
+        {screen === 'aml' && (
+          <AMLMonitor
+            token={token}
+            applicantId={result?.applicant_id ?? ''}
+            kycRequestId={result?.request_id}
+          />
+        )}
       </main>
 
       <footer className="footer">
-        HDFC AI KYC Intelligence Suite · Phase 1: KYC · Phase 2: Credit Underwriting ·
-        RBI-compliant explainable AI
+        HDFC AI KYC Intelligence Suite · Phase 1: KYC · Phase 2: Credit · Phase 3: AML ·
+        RBI &amp; PMLA compliant
       </footer>
     </div>
   )
